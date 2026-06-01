@@ -4,7 +4,11 @@ export interface Env {
 }
 
 type ModuleId = "tdr" | "eett" | "sst" | "technical-review";
-interface GenerateBody { module: ModuleId; input: Record<string, unknown> }
+interface GenerateBody {
+  module: ModuleId;
+  input: Record<string, unknown>;
+  options?: { count?: number; detail?: "standard" | "advanced"; variation?: boolean };
+}
 
 const MODULE_GUIDANCE: Record<ModuleId, string> = {
   tdr: "Redacta una propuesta preliminar de Términos de Referencia con antecedentes, objeto, alcance, actividades, entregables, plazo, perfil y criterios de conformidad.",
@@ -30,7 +34,7 @@ export default {
     try { body = await request.json(); } catch { return json({ success: false, error: "El cuerpo debe ser JSON válido." }, 400, corsHeaders); }
     if (!isGenerateBody(body)) return json({ success: false, error: "Payload inválido. Revisa module e input." }, 400, corsHeaders);
 
-    const prompt = buildPrompt(body.module, body.input);
+    const prompt = buildPrompt(body.module, body.input, body.options);
     try {
       const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent", {
         method: "POST",
@@ -51,7 +55,10 @@ export default {
   },
 };
 
-function buildPrompt(module: ModuleId, input: Record<string, unknown>): string {
+function buildPrompt(module: ModuleId, input: Record<string, unknown>, options?: GenerateBody["options"]): string {
+  const count = Math.min(Math.max(options?.count ?? 1, 1), 3);
+  const detail = options?.detail === "standard" ? "estándar" : "avanzado";
+  const variation = options?.variation !== false;
   return `Actúa como asistente técnico documental. ${MODULE_GUIDANCE[module]}
 
 Reglas obligatorias:
@@ -61,6 +68,10 @@ Reglas obligatorias:
 - Diferencia con títulos claros: Hechos proporcionados, Supuestos declarados, Recomendaciones, Riesgos documentales y Texto sugerido.
 - Mantén un estilo formal, verificable y apto para revisión profesional.
 - Añade al final una advertencia de validación técnica y legal.
+- Genera ${count} documento(s) claramente separado(s), con nivel de detalle ${detail}.
+- ${variation ? "Cada documento debe representar una variante sintética diferenciada y útil. Declara expresamente todo supuesto adicional." : "Conserva un único escenario coherente con los datos proporcionados."}
+- Cuando generes más de un documento, usa encabezados: DOCUMENTO 1, DOCUMENTO 2 y DOCUMENTO 3.
+- Incluye secciones, tablas Markdown o listas de verificación cuando ayuden a la revisión.
 
 Datos proporcionados:
 ${JSON.stringify(input, null, 2)}`;
@@ -71,7 +82,8 @@ function isGenerateBody(value: unknown): value is GenerateBody {
   const body = value as Record<string, unknown>;
   return ["tdr", "eett", "sst", "technical-review"].includes(String(body.module))
     && !!body.input && typeof body.input === "object" && !Array.isArray(body.input)
-    && JSON.stringify(body.input).length <= 20_000;
+    && JSON.stringify(body.input).length <= 20_000
+    && (!body.options || (typeof body.options === "object" && !Array.isArray(body.options)));
 }
 
 function allowedOrigins(env: Env): string[] {

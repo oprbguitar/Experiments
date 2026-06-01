@@ -1,4 +1,4 @@
-import { CheckCircle2, Clipboard, LoaderCircle, RotateCcw, Sparkles, WandSparkles } from "lucide-react";
+import { CheckCircle2, Clipboard, Dices, LoaderCircle, RotateCcw, Sparkles, WandSparkles } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { demoInputs, moduleContent, type AiModule } from "../data/content";
 import { generateDocument } from "../services/api";
@@ -10,6 +10,7 @@ export function Generator({ module }: { module: AiModule }) {
   const [warning, setWarning] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [options, setOptions] = useState<{ count: number; detail: "standard" | "advanced"; variation: boolean }>({ count: 1, detail: "advanced", variation: true });
 
   const reset = () => { setInput({}); setResult(""); setWarning(""); setError(""); };
   const autofill = () => { setInput(demoInputs[module]); setResult(""); setWarning(""); setError(""); };
@@ -18,7 +19,7 @@ export function Generator({ module }: { module: AiModule }) {
     if (!Object.values(input).some((value) => value.trim())) return setError("Completa al menos un campo para generar una propuesta.");
     setLoading(true); setError("");
     try {
-      const response = await generateDocument(module, input);
+      const response = await generateDocument(module, input, options);
       setResult(response.result); setWarning(response.warnings.join(" "));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No fue posible completar la solicitud.");
@@ -35,7 +36,8 @@ export function Generator({ module }: { module: AiModule }) {
             {config.fields.map((field) => <label className={field.multiline ? "md:col-span-2" : ""} key={field.name}><span className="label">{field.label}</span>{field.multiline ? <textarea rows={4} className="field resize-y" placeholder={field.placeholder} value={input[field.name] ?? ""} onChange={(event) => setInput({ ...input, [field.name]: event.target.value })} /> : <input className="field" placeholder={field.placeholder} value={input[field.name] ?? ""} onChange={(event) => setInput({ ...input, [field.name]: event.target.value })} />}</label>)}
           </div>
           {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-          <div className="mt-5 flex flex-wrap gap-3"><button disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-teal px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#126967] disabled:opacity-60">{loading ? <LoaderCircle size={17} className="animate-spin" /> : <WandSparkles size={17} />}{loading ? "Generando..." : "Generar propuesta"}</button><button type="button" onClick={autofill} className="inline-flex items-center gap-2 rounded-xl border border-teal/30 bg-teal/5 px-4 py-3 text-sm font-semibold text-teal hover:bg-teal/10"><Sparkles size={16} /> Autogenerar ejemplo</button><button type="button" onClick={reset} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"><RotateCcw size={16} /> Limpiar</button></div>
+          <section className="mt-5 rounded-2xl border border-teal/15 bg-teal/5 p-4"><div className="flex items-center gap-2 text-sm font-bold text-navy"><Dices size={17} className="text-teal" /> Generación avanzada con IA</div><div className="mt-3 grid gap-3 sm:grid-cols-2"><label><span className="label">Cantidad de documentos</span><select className="field" value={options.count} onChange={(event) => setOptions({ ...options, count: Number(event.target.value) })}><option value={1}>1 documento</option><option value={2}>2 documentos</option><option value={3}>3 documentos</option></select></label><label><span className="label">Nivel de detalle</span><select className="field" value={options.detail} onChange={(event) => setOptions({ ...options, detail: event.target.value as "standard" | "advanced" })}><option value="advanced">Avanzado</option><option value="standard">Estándar</option></select></label></div><label className="mt-3 flex items-start gap-2 text-xs leading-5 text-slate-600"><input type="checkbox" className="mt-1 accent-teal" checked={options.variation} onChange={(event) => setOptions({ ...options, variation: event.target.checked })} /> Crear variantes diferenciadas con escenarios sintéticos y supuestos expresamente declarados.</label></section>
+          <div className="mt-5 flex flex-wrap gap-3"><button disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-teal px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#126967] disabled:opacity-60">{loading ? <LoaderCircle size={17} className="animate-spin" /> : <WandSparkles size={17} />}{loading ? "Generando..." : options.count > 1 ? `Generar ${options.count} propuestas` : "Generar propuesta"}</button><button type="button" onClick={autofill} className="inline-flex items-center gap-2 rounded-xl border border-teal/30 bg-teal/5 px-4 py-3 text-sm font-semibold text-teal hover:bg-teal/10"><Sparkles size={16} /> Autogenerar ejemplo</button><button type="button" onClick={reset} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"><RotateCcw size={16} /> Limpiar</button></div>
         </form>
         <section className="panel min-h-[420px] p-5">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4"><div><h2 className="font-bold text-navy">Resultado estructurado</h2><p className="mt-1 text-xs text-slate-500">Borrador preliminar para revisión profesional</p></div>{result && <button aria-label="Copiar resultado" className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:text-teal" onClick={() => navigator.clipboard.writeText(result)}><Clipboard size={17} /></button>}</div>
