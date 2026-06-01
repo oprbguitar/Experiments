@@ -18,7 +18,7 @@ export async function generateDocument(module: AiModule, input: Record<string, s
       success: true,
       module,
       result: demoResult,
-      warnings: ["Modo demostración activo: configura VITE_API_BASE_URL para utilizar el Worker."],
+      warnings: ["Vista demostrativa: esta propuesta utiliza datos sintéticos. La integración asistida estará disponible cuando el servicio seguro se encuentre activo."],
     };
   }
 

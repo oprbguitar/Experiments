@@ -30,7 +30,7 @@ function App() {
             <div className="hidden items-center gap-2 text-sm font-semibold text-navy sm:flex"><ShieldCheck size={17} className="text-teal" /> Centro de control documental</div>
           </div>
           <div className="flex items-center gap-3">
-            <span className={`hidden rounded-full px-2.5 py-1 text-[11px] font-bold sm:inline-flex ${isDemoMode ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>{isDemoMode ? "DEMO LOCAL" : "WORKER ACTIVO"}</span>
+            <span className={`hidden rounded-full px-2.5 py-1 text-[11px] font-bold sm:inline-flex ${isDemoMode ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>{isDemoMode ? "MODO DEMO" : "SERVICIO IA ACTIVO"}</span>
             <button aria-label="Ayuda" className="text-slate-400 hover:text-teal"><CircleHelp size={18} /></button>
             <button aria-label="Notificaciones" className="text-slate-400 hover:text-teal"><Bell size={18} /></button>
             <span className="grid h-8 w-8 place-items-center rounded-full bg-navy text-xs font-bold text-white">NF</span>
