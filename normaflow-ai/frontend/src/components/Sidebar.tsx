@@ -1,5 +1,5 @@
-import { BarChart3, FileSearch, FileText, HardHat, LockKeyhole, Mail, PackageCheck, ShieldCheck, X } from "lucide-react";
-import { navItems, type ModuleId } from "../data/content";
+import { BarChart3, FileText, HardHat, LockKeyhole, Mail, PackageCheck, ShieldCheck, X } from "lucide-react";
+import type { ModuleId } from "../data/content";
 
 interface SidebarProps {
   active: ModuleId;
@@ -33,8 +33,6 @@ export function Sidebar({ active, open, onClose, onSelect }: SidebarProps) {
           ))}
           <div className="my-4 border-t border-white/10" />
           {[
-            ["dashboard", "Indicadores", BarChart3],
-            ["templates", "Plantillas", FileSearch],
             ["security", "Arquitectura segura", LockKeyhole],
             ["contact", "Contacto", Mail],
           ].map(([id, label, Icon]) => (

@@ -13,8 +13,6 @@ Transforma requerimientos dispersos en documentos técnicos, matrices de cumplim
 - Matrices preliminares de cumplimiento SST.
 - Análisis de claridad, coherencia y riesgos documentales.
 - Autogeneración de casos demostrativos.
-- Creación de plantillas personalizadas descargables.
-- Panel de indicadores con datos sintéticos.
 - Casos de uso anonimizados.
 
 ## Cómo explorar la demostración
@@ -23,7 +21,6 @@ Transforma requerimientos dispersos en documentos técnicos, matrices de cumplim
 2. Selecciona uno de los servicios del menú lateral.
 3. Pulsa `Autogenerar ejemplo` para completar un caso sintético.
 4. Pulsa `Generar propuesta` para visualizar un resultado preliminar.
-5. En `Plantillas`, crea una estructura personalizada y descárgala.
 
 ## Advertencia
 

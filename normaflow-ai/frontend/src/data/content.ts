@@ -1,19 +1,17 @@
-import { ClipboardCheck, FileSearch, FileText, Gauge, HardHat, Library, LockKeyhole, Mail, PackageCheck, Sparkles } from "lucide-react";
+import { ClipboardCheck, FileSearch, FileText, HardHat, LockKeyhole, Mail, PackageCheck, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type ModuleId = "home" | "dashboard" | "tdr" | "eett" | "sst" | "technical-review" | "templates" | "security" | "contact";
+export type ModuleId = "home" | "tdr" | "eett" | "sst" | "technical-review" | "security" | "contact";
 export type AiModule = Extract<ModuleId, "tdr" | "eett" | "sst" | "technical-review">;
 
 export interface NavItem { id: ModuleId; label: string; icon: LucideIcon }
 export interface FormField { name: string; label: string; placeholder: string; multiline?: boolean }
 
 export const navItems: NavItem[] = [
-  { id: "dashboard", label: "Indicadores", icon: Gauge },
   { id: "tdr", label: "Generador de TDR", icon: FileText },
   { id: "eett", label: "Generador de EETT", icon: PackageCheck },
   { id: "sst", label: "Cumplimiento SST", icon: HardHat },
   { id: "technical-review", label: "Análisis técnico", icon: FileSearch },
-  { id: "templates", label: "Plantillas", icon: Library },
   { id: "security", label: "Arquitectura segura", icon: LockKeyhole },
   { id: "contact", label: "Contacto", icon: Mail },
 ];

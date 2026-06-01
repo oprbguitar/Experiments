@@ -1,15 +1,14 @@
 import { Bell, CircleHelp, Menu, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Dashboard } from "./components/Dashboard";
 import { Generator } from "./components/Generator";
 import { Home } from "./components/Home";
-import { Contact, Security, Templates } from "./components/InfoPages";
+import { Contact, Security } from "./components/InfoPages";
 import { Sidebar } from "./components/Sidebar";
 import { type AiModule, type ModuleId } from "./data/content";
 import { isDemoMode } from "./services/api";
 
 const aiModules: AiModule[] = ["tdr", "eett", "sst", "technical-review"];
-const routes: ModuleId[] = ["home", "dashboard", "tdr", "eett", "sst", "technical-review", "templates", "security", "contact"];
+const routes: ModuleId[] = ["home", "tdr", "eett", "sst", "technical-review", "security", "contact"];
 
 function getRoute(): ModuleId {
   const route = window.location.hash.replace(/^#\/?/, "") || "home";
@@ -35,10 +34,9 @@ function App() {
   const content = aiModules.includes(active as AiModule)
     ? <Generator module={active as AiModule} />
     : active === "home" ? <Home onSelect={navigate} />
-    : active === "templates" ? <Templates />
     : active === "security" ? <Security />
     : active === "contact" ? <Contact />
-    : <Dashboard onSelect={navigate} />;
+    : <Home onSelect={navigate} />;
 
   return (
     <div className="min-h-screen bg-mist">

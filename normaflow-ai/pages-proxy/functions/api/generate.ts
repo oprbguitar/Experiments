@@ -17,6 +17,7 @@ const MODULE_GUIDANCE: Record<ModuleId, string> = {
 };
 
 const JSON_HEADERS = { "Content-Type": "application/json; charset=UTF-8" };
+type GeminiPayload = { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> };
 
 export const onRequestOptions: PagesFunction<Env> = async ({ request }) =>
   new Response(null, { status: 204, headers: corsHeaders(request.headers.get("Origin") ?? "") });
@@ -32,22 +33,26 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!isGenerateBody(body)) return json({ success: false, error: "Payload inválido. Revisa module e input." }, 400, headers);
 
   try {
-    const response = await generateWithFallback(env.GEMINI_API_KEY, buildPrompt(body.module, body.input, body.options));
-    if (!response.ok) return json({ success: false, error: "Gemini está temporalmente ocupado. Intenta nuevamente en unos segundos." }, 503, headers);
-    const payload = await response.json() as { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> };
-    const result = payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("\n").trim();
-    if (!result) return json({ success: false, error: "Gemini devolvió una respuesta vacía." }, 502, headers);
-    if (payload.candidates?.[0]?.finishReason === "MAX_TOKENS") return json({ success: false, error: "El documento superó la longitud disponible. Reduce el nivel de detalle o sintetiza los datos de entrada." }, 422, headers);
+    const { response, payload } = await generatePayload(env.GEMINI_API_KEY, buildPrompt(body.module, body.input, body.options));
+    if (!response.ok) return degradedResponse(body.module, body.input, headers, "Gemini está temporalmente ocupado. Se generó una estructura preliminar para mantener disponible la simulación.");
+    const result = getResult(payload);
+    if (!result || payload.candidates?.[0]?.finishReason === "MAX_TOKENS" || result.length > 20_000) {
+      return degradedResponse(body.module, body.input, headers, "Gemini intentó producir una respuesta excesiva. Se aplicó una síntesis estructurada para mantener el documento completo.");
+    }
     return json({ success: true, module: body.module, result, warnings: ["Resultado generado con IA. Requiere revisión profesional antes de su uso formal."] }, 200, headers);
   } catch {
     return json({ success: false, error: "Error de red al consultar el servicio de IA." }, 502, headers);
   }
 };
 
-async function generateWithFallback(apiKey: string, prompt: string): Promise<Response> {
+async function generateWithFallback(apiKey: string, prompt: string, maxOutputTokens = 4096): Promise<Response> {
   const body = JSON.stringify({
     contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
+    generationConfig: {
+      temperature: 0.3,
+      maxOutputTokens,
+      thinkingConfig: { thinkingBudget: 0 },
+    },
   });
   for (const model of ["gemini-2.5-flash-lite", "gemini-2.5-flash"]) {
     for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -61,6 +66,64 @@ async function generateWithFallback(apiKey: string, prompt: string): Promise<Res
     }
   }
   return new Response(null, { status: 503 });
+}
+
+async function generatePayload(apiKey: string, prompt: string): Promise<{ response: Response; payload: GeminiPayload }> {
+  let response = await generateWithFallback(apiKey, prompt);
+  if (!response.ok) return { response, payload: {} };
+  let payload = await response.json() as GeminiPayload;
+  if (payload.candidates?.[0]?.finishReason !== "MAX_TOKENS" && getResult(payload).length <= 20_000) return { response, payload };
+
+  response = await generateWithFallback(apiKey, `${prompt}
+
+Corrección obligatoria de extensión:
+- La respuesta anterior excedió la longitud permitida.
+- Reescribe el documento completo desde el inicio en un máximo de 1200 palabras.
+- No repitas párrafos, filas ni recomendaciones.
+- Finaliza todas las secciones y prioriza contenido verificable y conciso.`, 2048);
+  if (!response.ok) return { response, payload: {} };
+  payload = await response.json() as GeminiPayload;
+  return { response, payload };
+}
+
+function getResult(payload: GeminiPayload): string {
+  return payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("\n").trim() ?? "";
+}
+
+function degradedResponse(module: ModuleId, input: Record<string, unknown>, headers: Record<string, string>, warning: string): Response {
+  return json({ success: true, module, result: buildSafeDocument(module, input), warnings: [`${warning} Requiere revisión profesional antes de su uso formal.`] }, 200, headers);
+}
+
+function buildSafeDocument(module: ModuleId, input: Record<string, unknown>): string {
+  const facts = Object.entries(input).map(([key, value]) => `| ${key} | ${String(value)} |`).join("\n");
+  return `# Documento técnico preliminar
+
+## Resumen ejecutivo
+${MODULE_GUIDANCE[module]}
+
+## Hechos proporcionados
+| Campo | Información registrada |
+| --- | --- |
+${facts}
+
+## Supuestos declarados
+- No se incorporan normas, fechas ni datos que no hayan sido proporcionados.
+- Los campos no registrados deben ser completados por el área responsable.
+
+## Recomendaciones
+1. Validar el alcance y los criterios de aceptación con el responsable técnico.
+2. Verificar las referencias normativas aplicables antes del uso formal.
+3. Registrar responsables de elaboración, revisión y aprobación.
+
+## Riesgos documentales
+- Puede existir ambigüedad si faltan evidencias verificables.
+- El documento requiere validación técnica y legal antes de su aprobación.
+
+## Texto sugerido
+La información registrada constituye una estructura preliminar para revisión profesional. El área responsable deberá completar los vacíos identificados, validar los criterios técnicos y aprobar la versión final antes de su uso formal.
+
+## Advertencia
+Documento demostrativo sujeto a validación técnica y legal.`;
 }
 
 function buildPrompt(module: ModuleId, input: Record<string, unknown>, options?: GenerateBody["options"]): string {
@@ -81,6 +144,9 @@ Reglas obligatorias:
 - Devuelve Markdown limpio. Usa # para el título, ## para secciones y ### para subsecciones. No simules títulos usando solo negritas.
 - Completa todas las secciones antes de finalizar. No termines en medio de una tabla, lista, frase o apartado.
 - Si el documento es extenso, prioriza una estructura completa y concisa antes que desarrollar excesivamente una sección.
+- Limita la extensión total a un máximo de ${detail === "avanzado" ? "1800" : "1000"} palabras.
+- No repitas párrafos, recomendaciones, filas ni apartados.
+- Limita cada tabla a un máximo de 12 filas y cada lista a un máximo de 8 elementos.
 
 Datos proporcionados:
 ${JSON.stringify(input, null, 2)}`;

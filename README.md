@@ -13,8 +13,7 @@ Muchas organizaciones preparan Términos de Referencia, Especificaciones Técnic
 - Preparar Especificaciones Técnicas preliminares.
 - Organizar matrices de cumplimiento SST.
 - Revisar claridad, coherencia y riesgos de textos técnicos.
-- Crear y descargar plantillas personalizadas.
-- Visualizar indicadores y casos anonimizados con datos sintéticos.
+- Visualizar casos anonimizados con datos sintéticos.
 
 ## Alcance
 
