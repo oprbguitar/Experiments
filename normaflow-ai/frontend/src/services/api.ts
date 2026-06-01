@@ -26,13 +26,16 @@ export async function generateDocument(module: AiModule, input: Record<string, s
     };
   }
 
-  const response = await fetch(`${apiBaseUrl}/api/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ module, input, options }),
-  });
-
-  const payload = (await response.json()) as GenerateResponse & { error?: string };
-  if (!response.ok || !payload.success) throw new Error(payload.error ?? "No fue posible generar el documento.");
-  return payload;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const response = await fetch(`${apiBaseUrl}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ module, input, options }),
+    });
+    const payload = (await response.json()) as GenerateResponse & { error?: string };
+    if (response.ok && payload.success) return payload;
+    if (response.status !== 503 || attempt === 2) throw new Error(payload.error ?? "No fue posible generar el documento.");
+    await new Promise((resolve) => setTimeout(resolve, 1800 * (attempt + 1)));
+  }
+  throw new Error("No fue posible generar el documento.");
 }

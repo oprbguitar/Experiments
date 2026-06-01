@@ -54,15 +54,15 @@ async function generateWithFallback(apiKey: string, prompt: string): Promise<Res
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
   });
-  for (const model of ["gemini-2.5-flash", "gemini-2.5-flash-lite"]) {
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (const model of ["gemini-2.5-flash-lite", "gemini-2.5-flash"]) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: "POST",
         headers: { ...JSON_HEADERS, "x-goog-api-key": apiKey },
         body,
       });
-      if (response.ok || response.status !== 503) return response;
-      await new Promise((resolve) => setTimeout(resolve, 550 * (attempt + 1)));
+      if (response.ok || (response.status !== 429 && response.status < 500)) return response;
+      await new Promise((resolve) => setTimeout(resolve, 900 * (attempt + 1)));
     }
   }
   return new Response(null, { status: 503 });
