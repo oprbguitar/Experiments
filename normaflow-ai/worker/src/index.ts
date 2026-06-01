@@ -38,9 +38,10 @@ export default {
     try {
       const response = await generateWithFallback(env.GEMINI_API_KEY, prompt);
       if (!response.ok) return json({ success: false, error: "Gemini está temporalmente ocupado. Intenta nuevamente en unos segundos." }, 503, corsHeaders);
-      const payload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+      const payload = await response.json() as { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string }> } }> };
       const result = payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("\n").trim();
       if (!result) return json({ success: false, error: "Gemini devolvió una respuesta vacía." }, 502, corsHeaders);
+      if (payload.candidates?.[0]?.finishReason === "MAX_TOKENS") return json({ success: false, error: "El documento superó la longitud disponible. Reduce el nivel de detalle o sintetiza los datos de entrada." }, 422, corsHeaders);
       return json({ success: true, module: body.module, result, warnings: ["Resultado preliminar. Requiere revisión profesional antes de su uso formal."] }, 200, corsHeaders);
     } catch {
       return json({ success: false, error: "Error de red al consultar el servicio de IA." }, 502, corsHeaders);
@@ -51,7 +52,7 @@ export default {
 async function generateWithFallback(apiKey: string, prompt: string): Promise<Response> {
   const body = JSON.stringify({
     contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.35, maxOutputTokens: 3600 },
+    generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
   });
   for (const model of ["gemini-2.5-flash", "gemini-2.5-flash-lite"]) {
     for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -83,6 +84,8 @@ Reglas obligatorias:
 - No generes variantes ni documentos adicionales.
 - Incluye secciones, tablas Markdown o listas de verificación cuando ayuden a la revisión.
 - Devuelve Markdown limpio. Usa # para el título, ## para secciones y ### para subsecciones. No simules títulos usando solo negritas.
+- Completa todas las secciones antes de finalizar. No termines en medio de una tabla, lista, frase o apartado.
+- Si el documento es extenso, prioriza una estructura completa y concisa antes que desarrollar excesivamente una sección.
 
 Datos proporcionados:
 ${JSON.stringify(input, null, 2)}`;

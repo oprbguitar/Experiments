@@ -35,4 +35,5 @@ button { cursor: pointer; }
   .markdown-preview th { @apply border border-slate-200 bg-slate-100 px-3 py-2 text-left font-bold text-navy; }
   .markdown-preview td { @apply border border-slate-200 px-3 py-2 align-top; }
   .markdown-preview code { @apply rounded bg-slate-100 px-1.5 py-0.5 text-xs text-navy; }
+  .markdown-preview { scrollbar-color: #167b79 #eef2f5; scrollbar-width: thin; }
 }
