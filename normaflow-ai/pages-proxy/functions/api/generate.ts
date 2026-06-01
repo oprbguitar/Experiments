@@ -1,6 +1,5 @@
-export interface Env {
+interface Env {
   GEMINI_API_KEY: string;
-  ALLOWED_ORIGINS?: string;
 }
 
 type ModuleId = "tdr" | "eett" | "sst" | "technical-review";
@@ -19,33 +18,29 @@ const MODULE_GUIDANCE: Record<ModuleId, string> = {
 
 const JSON_HEADERS = { "Content-Type": "application/json; charset=UTF-8" };
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const origin = request.headers.get("Origin") ?? "";
-    const corsHeaders = getCorsHeaders(origin, env);
+export const onRequestOptions: PagesFunction<Env> = async ({ request }) =>
+  new Response(null, { status: 204, headers: corsHeaders(request.headers.get("Origin") ?? "") });
 
-    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
-    if (new URL(request.url).pathname !== "/api/generate") return json({ success: false, error: "Ruta no encontrada." }, 404, corsHeaders);
-    if (request.method !== "POST") return json({ success: false, error: "Método no permitido." }, 405, corsHeaders);
-    if (!isAllowedOrigin(origin, env)) return json({ success: false, error: "Origen no autorizado." }, 403, corsHeaders);
-    if (!env.GEMINI_API_KEY) return json({ success: false, error: "El servicio de IA no está configurado." }, 503, corsHeaders);
+export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+  const origin = request.headers.get("Origin") ?? "";
+  const headers = corsHeaders(origin);
+  if (!isAllowedOrigin(origin)) return json({ success: false, error: "Origen no autorizado." }, 403, headers);
+  if (!env.GEMINI_API_KEY) return json({ success: false, error: "El servicio de IA no está configurado." }, 503, headers);
 
-    let body: unknown;
-    try { body = await request.json(); } catch { return json({ success: false, error: "El cuerpo debe ser JSON válido." }, 400, corsHeaders); }
-    if (!isGenerateBody(body)) return json({ success: false, error: "Payload inválido. Revisa module e input." }, 400, corsHeaders);
+  let body: unknown;
+  try { body = await request.json(); } catch { return json({ success: false, error: "El cuerpo debe ser JSON válido." }, 400, headers); }
+  if (!isGenerateBody(body)) return json({ success: false, error: "Payload inválido. Revisa module e input." }, 400, headers);
 
-    const prompt = buildPrompt(body.module, body.input, body.options);
-    try {
-      const response = await generateWithFallback(env.GEMINI_API_KEY, prompt);
-      if (!response.ok) return json({ success: false, error: "Gemini está temporalmente ocupado. Intenta nuevamente en unos segundos." }, 503, corsHeaders);
-      const payload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
-      const result = payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("\n").trim();
-      if (!result) return json({ success: false, error: "Gemini devolvió una respuesta vacía." }, 502, corsHeaders);
-      return json({ success: true, module: body.module, result, warnings: ["Resultado preliminar. Requiere revisión profesional antes de su uso formal."] }, 200, corsHeaders);
-    } catch {
-      return json({ success: false, error: "Error de red al consultar el servicio de IA." }, 502, corsHeaders);
-    }
-  },
+  try {
+    const response = await generateWithFallback(env.GEMINI_API_KEY, buildPrompt(body.module, body.input, body.options));
+    if (!response.ok) return json({ success: false, error: "Gemini está temporalmente ocupado. Intenta nuevamente en unos segundos." }, 503, headers);
+    const payload = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+    const result = payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("\n").trim();
+    if (!result) return json({ success: false, error: "Gemini devolvió una respuesta vacía." }, 502, headers);
+    return json({ success: true, module: body.module, result, warnings: ["Resultado generado con IA. Requiere revisión profesional antes de su uso formal."] }, 200, headers);
+  } catch {
+    return json({ success: false, error: "Error de red al consultar el servicio de IA." }, 502, headers);
+  }
 };
 
 async function generateWithFallback(apiKey: string, prompt: string): Promise<Response> {
@@ -98,22 +93,13 @@ function isGenerateBody(value: unknown): value is GenerateBody {
     && (!body.options || (typeof body.options === "object" && !Array.isArray(body.options)));
 }
 
-function allowedOrigins(env: Env): string[] {
-  return (env.ALLOWED_ORIGINS ?? "http://localhost:5173,https://oprbguitar.github.io").split(",").map((value) => value.trim());
+function isAllowedOrigin(origin: string): boolean {
+  return origin === "" || ["https://oprbguitar.github.io", "http://localhost:5173", "http://127.0.0.1:5173"].includes(origin);
 }
 
-function isAllowedOrigin(origin: string, env: Env): boolean {
-  return origin === "" || allowedOrigins(env).includes(origin);
-}
-
-function getCorsHeaders(origin: string, env: Env): Record<string, string> {
-  const headers: Record<string, string> = {
-    ...JSON_HEADERS,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Vary": "Origin",
-  };
-  if (isAllowedOrigin(origin, env) && origin) headers["Access-Control-Allow-Origin"] = origin;
+function corsHeaders(origin: string): Record<string, string> {
+  const headers: Record<string, string> = { ...JSON_HEADERS, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type", "Vary": "Origin" };
+  if (isAllowedOrigin(origin) && origin) headers["Access-Control-Allow-Origin"] = origin;
   return headers;
 }
 
