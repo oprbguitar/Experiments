@@ -8,9 +8,7 @@ export interface GenerateResponse {
 }
 
 export interface GenerateOptions {
-  count: number;
   detail: "standard" | "advanced";
-  variation: boolean;
 }
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "");
@@ -20,13 +18,10 @@ export const isDemoMode = !apiBaseUrl;
 export async function generateDocument(module: AiModule, input: Record<string, string>, options: GenerateOptions): Promise<GenerateResponse> {
   if (!apiBaseUrl) {
     await new Promise((resolve) => setTimeout(resolve, 850));
-    const result = Array.from({ length: options.count }, (_, index) =>
-      options.count > 1 ? `# DOCUMENTO ${index + 1}\n\n${demoResult}` : demoResult,
-    ).join("\n\n---\n\n");
     return {
       success: true,
       module,
-      result,
+      result: demoResult,
       warnings: ["Vista demostrativa: esta propuesta utiliza datos sintéticos. La integración asistida estará disponible cuando el servicio seguro se encuentre activo."],
     };
   }

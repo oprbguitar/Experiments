@@ -7,7 +7,7 @@ type ModuleId = "tdr" | "eett" | "sst" | "technical-review";
 interface GenerateBody {
   module: ModuleId;
   input: Record<string, unknown>;
-  options?: { count?: number; detail?: "standard" | "advanced"; variation?: boolean };
+  options?: { detail?: "standard" | "advanced" };
 }
 
 const MODULE_GUIDANCE: Record<ModuleId, string> = {
@@ -68,22 +68,21 @@ async function generateWithFallback(apiKey: string, prompt: string): Promise<Res
 }
 
 function buildPrompt(module: ModuleId, input: Record<string, unknown>, options?: GenerateBody["options"]): string {
-  const count = Math.min(Math.max(options?.count ?? 1, 1), 3);
   const detail = options?.detail === "standard" ? "estándar" : "avanzado";
-  const variation = options?.variation !== false;
   return `Actúa como asistente técnico documental. ${MODULE_GUIDANCE[module]}
 
 Reglas obligatorias:
 - Usa solo los datos proporcionados.
+- Copia literalmente cifras, plazos, unidades y nombres proporcionados. No corrijas, completes ni reformules valores numéricos.
 - No inventes normas, fechas, certificaciones ni datos técnicos.
 - Cuando falte información, indícalo expresamente.
 - Diferencia con títulos claros: Hechos proporcionados, Supuestos declarados, Recomendaciones, Riesgos documentales y Texto sugerido.
 - Mantén un estilo formal, verificable y apto para revisión profesional.
 - Añade al final una advertencia de validación técnica y legal.
-- Genera ${count} documento(s) claramente separado(s), con nivel de detalle ${detail}.
-- ${variation ? "Cada documento debe representar una variante sintética diferenciada y útil. Declara expresamente todo supuesto adicional." : "Conserva un único escenario coherente con los datos proporcionados."}
-- Cuando generes más de un documento, usa encabezados: DOCUMENTO 1, DOCUMENTO 2 y DOCUMENTO 3.
+- Genera exactamente un documento con nivel de detalle ${detail}.
+- No generes variantes ni documentos adicionales.
 - Incluye secciones, tablas Markdown o listas de verificación cuando ayuden a la revisión.
+- Devuelve Markdown limpio. Usa # para el título, ## para secciones y ### para subsecciones. No simules títulos usando solo negritas.
 
 Datos proporcionados:
 ${JSON.stringify(input, null, 2)}`;

@@ -1,49 +1,18 @@
 import { ArrowDownToLine, CheckCircle2, ExternalLink, FilePlus2, Github, LockKeyhole, Mail, Server, ShieldCheck, Sparkles, Workflow } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { templates } from "../data/content";
+import { customTemplateFormat, downloadTemplate, previewTemplate } from "../utils/templateDownloads";
 
 export function Templates() {
   const [custom, setCustom] = useState({ name: "", type: "TDR", purpose: "" });
   const [generated, setGenerated] = useState("");
-  const contentFor = (name: string, type: string, purpose: string) => `NORMAFLOW AI
-
-PLANTILLA DEMOSTRATIVA: ${name}
-TIPO DOCUMENTAL: ${type}
-OBJETIVO: ${purpose || "Completar con el objetivo verificable del documento."}
-
-1. DATOS GENERALES
-- Entidad o empresa:
-- Área usuaria:
-- Responsable de revisión:
-- Fecha y versión:
-
-2. ANTECEDENTES
-- Describir el contexto y la necesidad documentada.
-
-3. ALCANCE
-- Precisar actividades, límites y exclusiones.
-
-4. ENTREGABLES O EVIDENCIAS
-- Definir evidencias verificables y criterios de aceptación.
-
-5. RIESGOS Y SUPUESTOS
-- Registrar vacíos de información y validaciones pendientes.
-
-ADVERTENCIA
-Esta plantilla es una referencia inicial y requiere revisión profesional antes de su uso formal.`;
-  const download = (name: string, type: string, purpose: string) => {
-    const content = contentFor(name, type, purpose);
-    const url = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
-    const link = document.createElement("a");
-    link.href = url; link.download = `${name.toLowerCase().replace(/ /g, "-")}.txt`; link.click();
-    URL.revokeObjectURL(url);
-  };
+  const download = (name: string, format: "DOCX" | "XLS", purpose: string) => downloadTemplate({ name, format, purpose });
   const generate = (event: FormEvent) => {
     event.preventDefault();
     if (!custom.name.trim()) return;
-    setGenerated(contentFor(custom.name, custom.type, custom.purpose));
+    setGenerated(previewTemplate({ name: custom.name, format: customTemplateFormat(custom.type), purpose: custom.purpose }));
   };
-  return <div className="space-y-5"><PageHeading kicker="Biblioteca técnica" title="Plantillas autogeneradas" description="Genera recursos editables para acelerar la preparación y revisión de documentos técnicos." /><section className="panel grid gap-5 p-5 lg:grid-cols-[0.85fr_1.15fr]"><form onSubmit={generate}><div className="flex items-center gap-3"><FilePlus2 className="text-teal" size={20} /><div><h2 className="font-bold text-navy">Nueva plantilla</h2><p className="text-xs text-slate-500">Define un objetivo y genera una estructura editable.</p></div></div><div className="mt-5 space-y-4"><label><span className="label">Nombre de la plantilla</span><input className="field" placeholder="Ej. Checklist de supervisión de campo" value={custom.name} onChange={(event) => setCustom({ ...custom, name: event.target.value })} /></label><label><span className="label">Tipo documental</span><select className="field" value={custom.type} onChange={(event) => setCustom({ ...custom, type: event.target.value })}><option>TDR</option><option>EETT</option><option>SST</option><option>Checklist técnico</option></select></label><label><span className="label">Objetivo</span><textarea className="field resize-y" rows={4} placeholder="Describe el propósito verificable..." value={custom.purpose} onChange={(event) => setCustom({ ...custom, purpose: event.target.value })} /></label></div><button className="mt-4 inline-flex items-center gap-2 rounded-xl bg-teal px-4 py-3 text-sm font-semibold text-white"><Sparkles size={16} /> Generar plantilla</button></form><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">{generated ? <><pre className="max-h-[350px] overflow-auto whitespace-pre-wrap font-sans text-xs leading-5 text-slate-600">{generated}</pre><button onClick={() => download(custom.name, custom.type, custom.purpose)} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-teal"><ArrowDownToLine size={16} /> Descargar plantilla generada</button></> : <div className="grid h-full min-h-52 place-items-center text-center text-sm text-slate-400">La estructura autogenerada aparecerá aquí.</div>}</div></section><div className="grid gap-4 md:grid-cols-2">{templates.map(([name, type, description]) => <article className="panel p-5" key={name}><div className="flex items-start justify-between"><div><p className="text-xs font-bold tracking-wider text-teal">{type}</p><h2 className="mt-2 font-bold text-navy">{name}</h2></div><ArrowDownToLine size={19} className="text-slate-400" /></div><p className="mt-3 text-sm leading-6 text-slate-500">{description}</p><button onClick={() => download(name, type, description)} className="mt-5 text-sm font-semibold text-teal">Descargar plantilla base</button></article>)}</div></div>;
+  return <div className="space-y-5"><PageHeading kicker="Biblioteca técnica" title="Plantillas autogeneradas" description="Genera recursos editables para acelerar la preparación y revisión de documentos técnicos." /><section className="panel grid gap-5 p-5 lg:grid-cols-[0.85fr_1.15fr]"><form onSubmit={generate}><div className="flex items-center gap-3"><FilePlus2 className="text-teal" size={20} /><div><h2 className="font-bold text-navy">Nueva plantilla</h2><p className="text-xs text-slate-500">Define un objetivo y genera una estructura editable.</p></div></div><div className="mt-5 space-y-4"><label><span className="label">Nombre de la plantilla</span><input className="field" placeholder="Ej. Checklist de supervisión de campo" value={custom.name} onChange={(event) => setCustom({ ...custom, name: event.target.value })} /></label><label><span className="label">Tipo documental</span><select className="field" value={custom.type} onChange={(event) => setCustom({ ...custom, type: event.target.value })}><option>TDR</option><option>EETT</option><option>SST</option><option>Checklist técnico</option></select></label><label><span className="label">Objetivo</span><textarea className="field resize-y" rows={4} placeholder="Describe el propósito verificable..." value={custom.purpose} onChange={(event) => setCustom({ ...custom, purpose: event.target.value })} /></label></div><button className="mt-4 inline-flex items-center gap-2 rounded-xl bg-teal px-4 py-3 text-sm font-semibold text-white"><Sparkles size={16} /> Generar plantilla</button></form><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">{generated ? <><pre className="max-h-[350px] overflow-auto whitespace-pre-wrap font-sans text-xs leading-5 text-slate-600">{generated}</pre><button onClick={() => download(custom.name, customTemplateFormat(custom.type), custom.purpose)} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-teal"><ArrowDownToLine size={16} /> Descargar plantilla {customTemplateFormat(custom.type)}</button></> : <div className="grid h-full min-h-52 place-items-center text-center text-sm text-slate-400">La estructura autogenerada aparecerá aquí.</div>}</div></section><div className="grid gap-4 md:grid-cols-2">{templates.map(([name, type, description]) => <article className="panel p-5" key={name}><div className="flex items-start justify-between"><div><p className="text-xs font-bold tracking-wider text-teal">{type}</p><h2 className="mt-2 font-bold text-navy">{name}</h2></div><ArrowDownToLine size={19} className="text-slate-400" /></div><p className="mt-3 text-sm leading-6 text-slate-500">{description}</p><button onClick={() => download(name, type as "DOCX" | "XLS", description)} className="mt-5 text-sm font-semibold text-teal">Descargar plantilla {type}</button></article>)}</div></div>;
 }
 
 export function Security() {

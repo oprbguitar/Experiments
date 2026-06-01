@@ -85,8 +85,8 @@ export const chartData = [
 export const templates = [
   ["TDR de servicio especializado", "DOCX", "Estructura editable para contratación de servicios."],
   ["EETT de bienes operativos", "DOCX", "Ficha base con criterios de aceptación verificables."],
-  ["Matriz IPERC demostrativa", "XLSX", "Registro sintético para evaluación y control SST."],
-  ["Checklist de revisión técnica", "XLSX", "Control previo para expedientes y documentos."],
+  ["Matriz IPERC demostrativa", "XLS", "Registro sintético para evaluación y control SST."],
+  ["Checklist de revisión técnica", "XLS", "Control previo para expedientes y documentos."],
 ];
 
 export const demoInputs: Record<AiModule, Record<string, string>> = {

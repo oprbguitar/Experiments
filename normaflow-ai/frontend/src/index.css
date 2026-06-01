@@ -20,4 +20,19 @@ button { cursor: pointer; }
   .panel { @apply rounded-2xl border border-slate-200/80 bg-white shadow-panel; }
   .field { @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-ink outline-none transition placeholder:text-slate-400 focus:border-teal focus:ring-4 focus:ring-teal/10; }
   .label { @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500; }
+  .markdown-preview { @apply text-sm leading-7 text-slate-700; }
+  .markdown-preview h1 { @apply mb-4 mt-7 border-b border-slate-200 pb-3 text-xl font-bold text-navy first:mt-0; }
+  .markdown-preview h2 { @apply mb-3 mt-6 text-lg font-bold text-navy; }
+  .markdown-preview h3 { @apply mb-2 mt-5 text-base font-bold text-navy; }
+  .markdown-preview h4 { @apply mb-2 mt-4 text-sm font-bold text-navy; }
+  .markdown-preview p { @apply my-2; }
+  .markdown-preview ul { @apply my-3 list-disc space-y-1 pl-6; }
+  .markdown-preview ol { @apply my-3 list-decimal space-y-1 pl-6; }
+  .markdown-preview strong { @apply font-bold text-ink; }
+  .markdown-preview hr { @apply my-6 border-slate-200; }
+  .markdown-preview blockquote { @apply my-4 border-l-4 border-teal bg-teal/5 px-4 py-2 text-slate-600; }
+  .markdown-preview table { @apply my-4 w-full border-collapse overflow-hidden text-xs; }
+  .markdown-preview th { @apply border border-slate-200 bg-slate-100 px-3 py-2 text-left font-bold text-navy; }
+  .markdown-preview td { @apply border border-slate-200 px-3 py-2 align-top; }
+  .markdown-preview code { @apply rounded bg-slate-100 px-1.5 py-0.5 text-xs text-navy; }
 }

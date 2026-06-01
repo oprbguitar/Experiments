@@ -9,6 +9,8 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           charts: ["recharts"],
+          documents: ["docx"],
+          markdown: ["react-markdown", "remark-gfm"],
         },
       },
     },
