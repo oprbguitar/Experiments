@@ -33,3 +33,9 @@ Esta herramienta es demostrativa. Los resultados deben ser revisados por un prof
 
 https://oprbguitar.github.io/Experiments/
 
+## Accesos directos a simulaciones
+
+- Términos de Referencia: https://oprbguitar.github.io/Experiments/#/tdr
+- Especificaciones Técnicas: https://oprbguitar.github.io/Experiments/#/eett
+- Cumplimiento SST: https://oprbguitar.github.io/Experiments/#/sst
+- Análisis técnico: https://oprbguitar.github.io/Experiments/#/technical-review

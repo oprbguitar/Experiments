@@ -1,5 +1,13 @@
 # Guía local de NormaFlow AI
 
+## Accesos directos en la versión pública
+
+- Inicio: https://oprbguitar.github.io/Experiments/#/
+- TDR: https://oprbguitar.github.io/Experiments/#/tdr
+- EETT: https://oprbguitar.github.io/Experiments/#/eett
+- SST: https://oprbguitar.github.io/Experiments/#/sst
+- Análisis técnico: https://oprbguitar.github.io/Experiments/#/technical-review
+
 ## Acceso rápido
 
 La aplicación puede ejecutarse en dos modalidades:

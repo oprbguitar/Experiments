@@ -1,7 +1,7 @@
 import { ClipboardCheck, FileSearch, FileText, Gauge, HardHat, Library, LockKeyhole, Mail, PackageCheck, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-export type ModuleId = "dashboard" | "tdr" | "eett" | "sst" | "technical-review" | "templates" | "security" | "contact";
+export type ModuleId = "home" | "dashboard" | "tdr" | "eett" | "sst" | "technical-review" | "templates" | "security" | "contact";
 export type AiModule = Extract<ModuleId, "tdr" | "eett" | "sst" | "technical-review">;
 
 export interface NavItem { id: ModuleId; label: string; icon: LucideIcon }
